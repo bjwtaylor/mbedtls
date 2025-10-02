@@ -158,7 +158,7 @@ static int x509_csr_parse_extensions(mbedtls_x509_csr *csr,
 
             case MBEDTLS_X509_EXT_SUBJECT_ALT_NAME:
                 /* Parse subject alt name */
-                if ((ret = mbedtls_x509_get_subject_alt_name(p, end_ext_data,
+                if ((ret = mbedtls_x509_get_subject_alt_name_ext(p, end_ext_data,
                                                              &csr->subject_alt_names)) != 0) {
                     return ret;
                 }
@@ -462,6 +462,7 @@ int mbedtls_x509_csr_parse(mbedtls_x509_csr *csr, const unsigned char *buf, size
      * Check for valid input
      */
     if (csr == NULL || buf == NULL || buflen == 0) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_BAD_INPUT_DATA;
     }
 
@@ -489,10 +490,12 @@ int mbedtls_x509_csr_parse(mbedtls_x509_csr *csr, const unsigned char *buf, size
 
         mbedtls_pem_free(&pem);
         if (ret != MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return ret;
         }
     }
 #endif /* MBEDTLS_PEM_PARSE_C */
+    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
     return mbedtls_x509_csr_parse_der(csr, buf, buflen);
 }
 
@@ -507,10 +510,12 @@ int mbedtls_x509_csr_parse_file(mbedtls_x509_csr *csr, const char *path)
     unsigned char *buf;
 
     if ((ret = mbedtls_pk_load_file(path, &buf, &n)) != 0) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
     ret = mbedtls_x509_csr_parse(csr, buf, n);
+    if(ret!=0){ mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);}
 
     mbedtls_zeroize_and_free(buf, n);
 

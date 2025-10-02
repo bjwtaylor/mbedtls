@@ -869,10 +869,12 @@ static int x509_get_crt_ext(unsigned char **p,
     unsigned char *end_ext_data, *start_ext_octet, *end_ext_octet;
 
     if (*p == end) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return 0;
     }
 
     if ((ret = mbedtls_x509_get_ext(p, end, &crt->v3_ext, 3)) != 0) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -890,6 +892,7 @@ static int x509_get_crt_ext(unsigned char **p,
 
         if ((ret = mbedtls_asn1_get_tag(p, end, &len,
                                         MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
         }
 
@@ -898,6 +901,7 @@ static int x509_get_crt_ext(unsigned char **p,
         /* Get extension ID */
         if ((ret = mbedtls_asn1_get_tag(p, end_ext_data, &extn_oid.len,
                                         MBEDTLS_ASN1_OID)) != 0) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
         }
 
@@ -908,12 +912,14 @@ static int x509_get_crt_ext(unsigned char **p,
         /* Get optional critical */
         if ((ret = mbedtls_asn1_get_bool(p, end_ext_data, &is_critical)) != 0 &&
             (ret != MBEDTLS_ERR_ASN1_UNEXPECTED_TAG)) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
         }
 
         /* Data should be octet string type */
         if ((ret = mbedtls_asn1_get_tag(p, end_ext_data, &len,
                                         MBEDTLS_ASN1_OCTET_STRING)) != 0) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
         }
 
@@ -921,6 +927,7 @@ static int x509_get_crt_ext(unsigned char **p,
         end_ext_octet = *p + len;
 
         if (end_ext_octet != end_ext_data) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                      MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
         }
@@ -935,6 +942,7 @@ static int x509_get_crt_ext(unsigned char **p,
             if (cb != NULL) {
                 ret = cb(p_ctx, crt, &extn_oid, is_critical, *p, end_ext_octet);
                 if (ret != 0 && is_critical) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 *p = end_ext_octet;
@@ -946,6 +954,7 @@ static int x509_get_crt_ext(unsigned char **p,
 
             if (is_critical) {
                 /* Data is marked as critical: fail */
+                mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                 return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                          MBEDTLS_ERR_ASN1_UNEXPECTED_TAG);
             }
@@ -954,6 +963,7 @@ static int x509_get_crt_ext(unsigned char **p,
 
         /* Forbid repeated extensions */
         if ((crt->ext_types & ext_type) != 0) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
         }
 
@@ -964,6 +974,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse basic constraints */
                 if ((ret = x509_get_basic_constraints(p, end_ext_octet,
                                                       &crt->ca_istrue, &crt->max_pathlen)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -972,6 +983,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse key usage */
                 if ((ret = mbedtls_x509_get_key_usage(p, end_ext_octet,
                                                       &crt->key_usage)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -980,6 +992,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse extended key usage */
                 if ((ret = x509_get_ext_key_usage(p, end_ext_octet,
                                                   &crt->ext_key_usage)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -988,6 +1001,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse subject key identifier */
                 if ((ret = x509_get_subject_key_id(p, end_ext_data,
                                                    &crt->subject_key_id)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -996,6 +1010,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse authority key identifier */
                 if ((ret = x509_get_authority_key_id(p, end_ext_octet,
                                                      &crt->authority_key_id)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -1003,8 +1018,9 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse subject alt name
                  * SubjectAltName ::= GeneralNames
                  */
-                if ((ret = mbedtls_x509_get_subject_alt_name(p, end_ext_octet,
+                if ((ret = mbedtls_x509_get_subject_alt_name_ext(p, end_ext_octet,
                                                              &crt->subject_alt_names)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -1013,6 +1029,7 @@ static int x509_get_crt_ext(unsigned char **p,
                 /* Parse netscape certificate type */
                 if ((ret = mbedtls_x509_get_ns_cert_type(p, end_ext_octet,
                                                          &crt->ns_cert_type)) != 0) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return ret;
                 }
                 break;
@@ -1030,6 +1047,7 @@ static int x509_get_crt_ext(unsigned char **p,
                     }
 
                     if (is_critical) {
+                        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                         return ret;
                     } else
                     /*
@@ -1039,6 +1057,7 @@ static int x509_get_crt_ext(unsigned char **p,
                      * unless the extension is critical.
                      */
                     if (ret != MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE) {
+                        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                         return ret;
                     }
                 }
@@ -1051,6 +1070,7 @@ static int x509_get_crt_ext(unsigned char **p,
                  * skip the extension.
                  */
                 if (is_critical) {
+                    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                     return MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE;
                 } else {
                     *p = end_ext_octet;
@@ -1059,10 +1079,12 @@ static int x509_get_crt_ext(unsigned char **p,
     }
 
     if (*p != end) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
 
+    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
     return 0;
 }
 
@@ -1089,6 +1111,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
      * Check for valid input
      */
     if (crt == NULL || buf == NULL) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_BAD_INPUT_DATA;
     }
 
@@ -1106,6 +1129,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = mbedtls_asn1_get_tag(&p, end, &len,
                                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_INVALID_FORMAT;
     }
 
@@ -1115,6 +1139,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         /* Create and populate a new buffer for the raw field. */
         crt->raw.p = p = mbedtls_calloc(1, crt->raw.len);
         if (crt->raw.p == NULL) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERR_X509_ALLOC_FAILED;
         }
 
@@ -1136,6 +1161,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = mbedtls_asn1_get_tag(&p, end, &len,
                                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_FORMAT, ret);
     }
 
@@ -1154,11 +1180,13 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         (ret = mbedtls_x509_get_alg(&p, end, &crt->sig_oid,
                                     &sig_params1)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
     if (crt->version < 0 || crt->version > 2) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_UNKNOWN_VERSION;
     }
 
@@ -1167,6 +1195,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = mbedtls_x509_get_sig_alg(&crt->sig_oid, &sig_params1,
                                         &crt->sig_md, &crt->sig_pk)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -1178,11 +1207,13 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = mbedtls_asn1_get_tag(&p, end, &len,
                                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_FORMAT, ret);
     }
 
     if ((ret = mbedtls_x509_get_name(&p, p + len, &crt->issuer)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -1197,6 +1228,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = x509_get_dates(&p, end, &crt->valid_from,
                               &crt->valid_to)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -1208,11 +1240,13 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     if ((ret = mbedtls_asn1_get_tag(&p, end, &len,
                                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_FORMAT, ret);
     }
 
     if (len && (ret = mbedtls_x509_get_name(&p, p + len, &crt->subject)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -1224,6 +1258,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
     crt->pk_raw.p = p;
     if ((ret = mbedtls_pk_parse_subpubkey(&p, end, &crt->pk)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
     crt->pk_raw.len = (size_t) (p - crt->pk_raw.p);
@@ -1240,6 +1275,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         ret = x509_get_uid(&p, end, &crt->issuer_id,  1);
         if (ret != 0) {
             mbedtls_x509_crt_free(crt);
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return ret;
         }
     }
@@ -1248,6 +1284,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         ret = x509_get_uid(&p, end, &crt->subject_id,  2);
         if (ret != 0) {
             mbedtls_x509_crt_free(crt);
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return ret;
         }
     }
@@ -1256,12 +1293,14 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         ret = x509_get_crt_ext(&p, end, crt, cb, p_ctx);
         if (ret != 0) {
             mbedtls_x509_crt_free(crt);
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return ret;
         }
     }
 
     if (p != end) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_FORMAT,
                                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
@@ -1277,6 +1316,7 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
      */
     if ((ret = mbedtls_x509_get_alg(&p, end, &sig_oid2, &sig_params2)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
@@ -1287,20 +1327,24 @@ static int x509_crt_parse_der_core(mbedtls_x509_crt *crt,
         (sig_params1.len != 0 &&
          memcmp(sig_params1.p, sig_params2.p, sig_params1.len) != 0)) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_SIG_MISMATCH;
     }
 
     if ((ret = mbedtls_x509_get_sig(&p, end, &crt->sig)) != 0) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
     if (p != end) {
         mbedtls_x509_crt_free(crt);
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_FORMAT,
                                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
 
+    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
     return 0;
 }
 
@@ -1322,6 +1366,7 @@ static int mbedtls_x509_crt_parse_der_internal(mbedtls_x509_crt *chain,
      * Check for valid input
      */
     if (crt == NULL || buf == NULL) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_BAD_INPUT_DATA;
     }
 
@@ -1337,6 +1382,7 @@ static int mbedtls_x509_crt_parse_der_internal(mbedtls_x509_crt *chain,
         crt->next = mbedtls_calloc(1, sizeof(mbedtls_x509_crt));
 
         if (crt->next == NULL) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERR_X509_ALLOC_FAILED;
         }
 
@@ -1355,9 +1401,11 @@ static int mbedtls_x509_crt_parse_der_internal(mbedtls_x509_crt *chain,
             mbedtls_free(crt);
         }
 
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
+    mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
     return 0;
 }
 
@@ -1396,12 +1444,14 @@ int mbedtls_x509_crt_parse(mbedtls_x509_crt *chain,
 #if defined(MBEDTLS_PEM_PARSE_C)
     int success = 0, first_error = 0, total_failed = 0;
     int buf_format = MBEDTLS_X509_FORMAT_DER;
+    int ret; //bjwt
 #endif
 
     /*
      * Check for valid input
      */
     if (chain == NULL || buf == NULL) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERR_X509_BAD_INPUT_DATA;
     }
 
@@ -1416,15 +1466,21 @@ int mbedtls_x509_crt_parse(mbedtls_x509_crt *chain,
     }
 
     if (buf_format == MBEDTLS_X509_FORMAT_DER) {
-        return mbedtls_x509_crt_parse_der(chain, buf, buflen);
+        ret = mbedtls_x509_crt_parse_der(chain, buf, buflen); 
+        if(ret!=0){mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);}//bjwt
+        return ret; //bjwt
+        //return mbedtls_x509_crt_parse_der(chain, buf, buflen); bjwt
     }
 #else
-    return mbedtls_x509_crt_parse_der(chain, buf, buflen);
+    ret = mbedtls_x509_crt_parse_der(chain, buf, buflen);//bjwt
+    if(ret!=0){mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);}//bjwt
+    return ret; //bjwt
+    //return mbedtls_x509_crt_parse_der(chain, buf, buflen); bjwt
 #endif
 
 #if defined(MBEDTLS_PEM_PARSE_C)
     if (buf_format == MBEDTLS_X509_FORMAT_PEM) {
-        int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+        ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
         mbedtls_pem_context pem;
 
         /* 1 rather than 0 since the terminating NULL byte is counted in */
@@ -1510,10 +1566,12 @@ int mbedtls_x509_crt_parse_file(mbedtls_x509_crt *chain, const char *path)
     unsigned char *buf;
 
     if ((ret = mbedtls_pk_load_file(path, &buf, &n)) != 0) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return ret;
     }
 
     ret = mbedtls_x509_crt_parse(chain, buf, n);
+    if(ret!=0){mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);}
 
     mbedtls_zeroize_and_free(buf, n);
 

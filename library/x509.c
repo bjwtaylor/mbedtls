@@ -1272,6 +1272,20 @@ int mbedtls_x509_get_subject_alt_name_ext(unsigned char **p,
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t tag_len;
     mbedtls_asn1_sequence *cur = subject_alt_name;
+    //bjwt the following section has been copied from the original mbedtls_x509_get_subject_alt_name finction
+    //and appears to be required by some functions and not others.
+    size_t len;
+
+    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
+    }
+
+    if (*p + len != end) {
+        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
+                                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
+    }
+    //Inserted section end
 
     while (*p < end) {
         mbedtls_x509_subject_alternative_name tmp_san_name;
@@ -1282,14 +1296,17 @@ int mbedtls_x509_get_subject_alt_name_ext(unsigned char **p,
         (*p)++;
 
         if ((ret = mbedtls_asn1_get_len(p, end, &tag_len)) != 0) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
         }
 
         tmp_san_buf.p = *p;
         tmp_san_buf.len = tag_len;
 
+        mbedtls_printf("bjwt:file=%s,line=%i\n tmp_san_buf.tag & MBEDTLS_ASN1_TAG_CLASS_MASK = %i, MBEDTLS_ASN1_CONTEXT_SPECIFIC = %i\n", __FILE_NAME__, __LINE__, tmp_san_buf.tag & MBEDTLS_ASN1_TAG_CLASS_MASK, MBEDTLS_ASN1_CONTEXT_SPECIFIC);
         if ((tmp_san_buf.tag & MBEDTLS_ASN1_TAG_CLASS_MASK) !=
             MBEDTLS_ASN1_CONTEXT_SPECIFIC) {
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                      MBEDTLS_ERR_ASN1_UNEXPECTED_TAG);
         }
@@ -1306,6 +1323,7 @@ int mbedtls_x509_get_subject_alt_name_ext(unsigned char **p,
         if (ret != 0 && ret != MBEDTLS_ERR_X509_FEATURE_UNAVAILABLE) {
             mbedtls_asn1_sequence_free(subject_alt_name->next);
             subject_alt_name->next = NULL;
+            mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
             return ret;
         }
 
@@ -1313,12 +1331,14 @@ int mbedtls_x509_get_subject_alt_name_ext(unsigned char **p,
         /* Allocate and assign next pointer */
         if (cur->buf.p != NULL) {
             if (cur->next != NULL) {
+                mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                 return MBEDTLS_ERR_X509_INVALID_EXTENSIONS;
             }
 
             cur->next = mbedtls_calloc(1, sizeof(mbedtls_asn1_sequence));
 
             if (cur->next == NULL) {
+                mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
                 return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                          MBEDTLS_ERR_ASN1_ALLOC_FAILED);
             }
@@ -1334,60 +1354,12 @@ int mbedtls_x509_get_subject_alt_name_ext(unsigned char **p,
     cur->next = NULL;
 
     if (*p != end) {
+        mbedtls_printf("bjwt:file=%s,line=%i\n", __FILE_NAME__, __LINE__);
         return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
                                  MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
     }
 
     return 0;
-}
-
-/*
- * SubjectAltName ::= GeneralNames
- *
- * GeneralNames ::= SEQUENCE SIZE (1..MAX) OF GeneralName
- *
- * GeneralName ::= CHOICE {
- *      otherName                       [0]     OtherName,
- *      rfc822Name                      [1]     IA5String,
- *      dNSName                         [2]     IA5String,
- *      x400Address                     [3]     ORAddress,
- *      directoryName                   [4]     Name,
- *      ediPartyName                    [5]     EDIPartyName,
- *      uniformResourceIdentifier       [6]     IA5String,
- *      iPAddress                       [7]     OCTET STRING,
- *      registeredID                    [8]     OBJECT IDENTIFIER }
- *
- * OtherName ::= SEQUENCE {
- *      type-id    OBJECT IDENTIFIER,
- *      value      [0] EXPLICIT ANY DEFINED BY type-id }
- *
- * EDIPartyName ::= SEQUENCE {
- *      nameAssigner            [0]     DirectoryString OPTIONAL,
- *      partyName               [1]     DirectoryString }
- *
- * We list all types, but use the following GeneralName types from RFC 5280:
- * "dnsName", "uniformResourceIdentifier" and "hardware_module_name"
- * of type "otherName", as defined in RFC 4108.
- */
-int mbedtls_x509_get_subject_alt_name(unsigned char **p,
-                                      const unsigned char *end,
-                                      mbedtls_x509_sequence *subject_alt_name)
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t len;
-
-    /* Get main sequence tag */
-    if ((ret = mbedtls_asn1_get_tag(p, end, &len,
-                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE)) != 0) {
-        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS, ret);
-    }
-
-    if (*p + len != end) {
-        return MBEDTLS_ERROR_ADD(MBEDTLS_ERR_X509_INVALID_EXTENSIONS,
-                                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH);
-    }
-
-    return mbedtls_x509_get_subject_alt_name_ext(p, end, subject_alt_name);
 }
 
 int mbedtls_x509_get_ns_cert_type(unsigned char **p,
