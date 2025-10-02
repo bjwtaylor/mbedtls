@@ -1922,7 +1922,7 @@ start_processing:
         }
         p += 2;
 
-        if (!mbedtls_pk_can_do(peer_pk, pk_alg)) {
+        if (!mbedtls_pk_can_do_ext(peer_pk, pk_alg)) {
             MBEDTLS_SSL_DEBUG_MSG(1,
                                   ("bad server key exchange message"));
             mbedtls_ssl_send_alert_message(
@@ -1978,7 +1978,7 @@ start_processing:
         /*
          * Verify signature
          */
-        if (!mbedtls_pk_can_do(peer_pk, pk_alg)) {
+        if (!mbedtls_pk_can_do_ext(peer_pk, pk_alg)) {
             MBEDTLS_SSL_DEBUG_MSG(1, ("bad server key exchange message"));
             mbedtls_ssl_send_alert_message(
                 ssl,

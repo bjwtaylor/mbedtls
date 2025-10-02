@@ -222,9 +222,9 @@ static int x509write_csr_der_internal(mbedtls_x509write_csr *ctx,
         return ret;
     }
 
-    if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_RSA)) {
+    if (mbedtls_pk_can_do_ext(ctx->key, MBEDTLS_PK_RSA)) {
         pk_alg = MBEDTLS_PK_RSA;
-    } else if (mbedtls_pk_can_do(ctx->key, MBEDTLS_PK_ECDSA)) {
+    } else if (mbedtls_pk_can_do_ext(ctx->key, MBEDTLS_PK_ECDSA)) {
         pk_alg = MBEDTLS_PK_ECDSA;
     } else {
         return MBEDTLS_ERR_X509_INVALID_ALG;

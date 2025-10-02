@@ -2121,7 +2121,7 @@ static int x509_crt_check_signature(const mbedtls_x509_crt *child,
     }
 
     /* Skip expensive computation on obvious mismatch */
-    if (!mbedtls_pk_can_do(&parent->pk, (mbedtls_pk_type_t) child->sig_pk)) {
+    if (!mbedtls_pk_can_do_ext(&parent->pk, (mbedtls_pk_type_t) child->sig_pk)) {
         return -1;
     }
 

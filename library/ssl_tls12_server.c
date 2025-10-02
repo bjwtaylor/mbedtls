@@ -3426,7 +3426,7 @@ static int ssl_parse_certificate_verify(mbedtls_ssl_context *ssl)
     /*
      * Check the certificate's key type matches the signature alg
      */
-    if (!mbedtls_pk_can_do(peer_pk, pk_alg)) {
+    if (!mbedtls_pk_can_do_ext(peer_pk, pk_alg)) {
         MBEDTLS_SSL_DEBUG_MSG(1, ("sig_alg doesn't match cert key"));
         return MBEDTLS_ERR_SSL_ILLEGAL_PARAMETER;
     }
