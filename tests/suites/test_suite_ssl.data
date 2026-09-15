@@ -3379,7 +3379,7 @@ reject_hrr_selecting_unoffered_group
 
 EC-JPAKE read round rejects a missing length byte
 depends_on:MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED:MBEDTLS_USE_PSA_CRYPTO
-ssl_ecjpake_read_round:0:MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL
+ssl_ecjpake_read_round:0:MBEDTLS_ERR_SSL_HANDSHAKE_FAILURE
 
 EC-JPAKE read round succeeds with a complete round
 depends_on:MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED:MBEDTLS_USE_PSA_CRYPTO
