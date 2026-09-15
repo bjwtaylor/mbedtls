@@ -4384,7 +4384,7 @@ void ssl_ecjpake_read_round(int input_len_arg, int expected_ret)
     const unsigned char password[] = "password";
     const unsigned char client_id[] = "client";
     const unsigned char server_id[] = "server";
-    const unsigned char *input;
+    unsigned char *input = NULL;
     unsigned char buf[512];
     size_t input_len;
     size_t olen = 0;
@@ -4440,12 +4440,16 @@ void ssl_ecjpake_read_round(int input_len_arg, int expected_ret)
         input_len = (size_t) input_len_arg;
         TEST_LE_U(input_len, olen);
     }
-    input = input_len == 0 ? NULL : buf;
+    if (input_len != 0) {
+        TEST_CALLOC(input, input_len);
+        memcpy(input, buf, input_len);
+    }
     TEST_EQUAL(mbedtls_psa_ecjpake_read_round(
                    &server, input, input_len, MBEDTLS_ECJPAKE_ROUND_TWO),
                expected_ret);
 
 exit:
+    mbedtls_free(input);
     psa_destroy_key(key);
     psa_pake_abort(&client);
     psa_pake_abort(&server);
